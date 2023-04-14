@@ -8,7 +8,7 @@ struct Record
 {
     char nombre[30];
     char carrera[20];
-    int ciclo;
+    int ciclo = -1;
 
     string getKey() {
         return string(nombre);
@@ -27,6 +27,7 @@ struct Record
         cout << "\nNombre: " << nombre;
         cout << "\nCarrera: " << carrera;
         cout << "\nCiclo : " << ciclo;
+        cout << "\n----" << endl;
     }    
 };
 
@@ -49,40 +50,44 @@ public:
     }
 
     /*
-    * Lee el archivo donde guardamos una copia del árbol (key,posFisica) para no volver a crear el árbol cada vez que se ejecute el programa
+    * Lee el archivo _ind.dat, si existe, y carga el contenido en el map
     */
     void readIndex()
     {
-        cout << "1" << endl;
       ifstream indexfile;
-        indexfile.open(this->indexName, ios::in | ios::binary);
-        if(indexfile.is_open())
+        indexfile.open(this->indexName, ios::in | ios::out | ios::binary);
+        if(indexfile.good())    //Si el archivo existe
         {
-            cout << "2" << endl;
-            Record record;
-            indexfile.seekg(0, ios::end); //seekg: posiciona el puntero al final del archivo
-            int fin = indexfile.tellg(); 
-            indexfile.seekg(0, ios::beg); //seekg: posiciona el puntero al inicio del archivo
-            cout << "3" << endl;
-            while(indexfile.tellg()<fin){ // end of file
-                cout << "posicion: " << indexfile.tellg() << endl;
-                cout << "fin: " << fin << endl;
-                long posFisica = indexfile.tellg(); //tellg: devuelve la posicion actual del puntero
-                indexfile.read((char*)&record, sizeof(Record));
-                this->index[record.getKey()] = posFisica;
+            //Compruebo que el archivo no este vacio
+            long posFisica;
+            indexfile.seekg(0,ios::beg);
+            indexfile.read((char*)&posFisica, sizeof(posFisica));
+            if(indexfile.tellg() != -1){
+                char* key = new char[30];
+                indexfile.seekg(0, ios::end); //seekg: posiciona el puntero al final del archivo
+                int fin = indexfile.tellg();
+                indexfile.seekg(0, ios::beg); //seekg: posiciona el puntero al inicio del archivo
+                while(indexfile.tellg()<fin){ // end of file
+                    posFisica = indexfile.tellg(); //tellg: devuelve la posicion actual del puntero
+                    indexfile.read(key, 30);
+                    indexfile.read((char*)&posFisica, sizeof(posFisica));
+                    this->index[key] = posFisica;
+                }
             }
-            cout << "4" << endl;
+            
         }
-        cout << "salio del while" << endl;
+        indexfile.close();
     }
 
     /*
-    * Todo lo que está en el árbol se escribe en el archivo de índices para que cuando se ejecute el programa de nuevo solo lo leamos y carguemos a un árbol
+    * Al finalizar le programa, sobreescribe el contenido del map en el archivo _ind.dat
     */
     void writeIndex(){
         ofstream file(this->indexName, ios::out | ios::binary);
         for(auto& entry : index){
-            file.write(entry.first.c_str(), sizeof(entry.first));
+            //Guardo la key
+            file.write(entry.first.c_str(), 30);
+            //Guardo la posicion del registro en data.dat
             file.write((char*)&entry.second, sizeof(entry.second));
         }
         file.close();
@@ -104,13 +109,18 @@ public:
     /*
     * Busca un registro que coincida con la key
     */
-    Record* search(string key) {
-        Record* result = nullptr;
-        int posFisica = this->index[key];
+    Record search(string key) {
+        Record result;
+        //Si no se encuentra el registro, se retorna un registro vacio
+        auto it = this->index.find(key);
+        if(it == this->index.end())
+            return result;
+        //Si se encuentra el registro, se retorna el registro
+        long posFisica = this->index[key];
         ifstream dataFile;
         dataFile.open(this->fileName, ios::in | ios::binary);
         dataFile.seekg(posFisica, ios::beg);
-        dataFile.read((char*)result, sizeof(Record));
+        dataFile.read((char*)&result, sizeof(Record));
         dataFile.close();
         return result;
     }
@@ -137,8 +147,11 @@ public:
    */
     void scanAllByIndex() {
        for(auto it=index.begin(); it!=index.end(); ++it){
-            Record* record = search(it->first);
-            record->showData();
+            Record record = search(it->first);
+            if(record.ciclo==-1)
+                cout << "No se encontró el registro" << endl;
+            else
+                record.showData();
         }
     }
 

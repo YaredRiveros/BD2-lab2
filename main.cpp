@@ -5,12 +5,11 @@ using namespace std;
 void writeFile(string filename){
     RandomFile file(filename);
     Record record;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 6; i++)
     {
         record.setData();
         file.write_record(record);
     }
-    cout << "olii" << endl;   
 }
 
 void readFile(string filename){
@@ -23,8 +22,6 @@ void readFile(string filename){
 
 int main(){
     writeFile("data.dat");
-    cout << "a" << endl;
     readFile("data.dat");
-    cout << "b" << endl;
     return 0;
 }
