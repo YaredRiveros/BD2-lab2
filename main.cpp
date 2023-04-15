@@ -5,7 +5,7 @@ using namespace std;
 void writeFile(string filename){
     RandomFile file(filename);
     Record record;
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 3; i++)
     {
         record.setData();
         file.write_record(record);

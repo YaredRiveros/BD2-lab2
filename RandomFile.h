@@ -61,18 +61,21 @@ public:
             //Compruebo que el archivo no este vacio
             long posFisica;
             indexfile.seekg(0,ios::beg);
-            indexfile.read((char*)&posFisica, sizeof(posFisica));
+            indexfile.read((char*)&posFisica, sizeof(posFisica)); //leo el primer registro para ver si esta vacio
+
             if(indexfile.tellg() != -1){
                 char* key = new char[30];
                 indexfile.seekg(0, ios::end); //seekg: posiciona el puntero al final del archivo
                 int fin = indexfile.tellg();
                 indexfile.seekg(0, ios::beg); //seekg: posiciona el puntero al inicio del archivo
+
                 while(indexfile.tellg()<fin){ // end of file
                     posFisica = indexfile.tellg(); //tellg: devuelve la posicion actual del puntero
                     indexfile.read(key, 30);
                     indexfile.read((char*)&posFisica, sizeof(posFisica));
                     this->index[key] = posFisica;
                 }
+
             }
             
         }
@@ -100,9 +103,18 @@ public:
        ofstream dataFile;
        dataFile.open(this->fileName, ios::app | ios::binary);
        long posFisica = dataFile.tellp();
-       dataFile.write((char*)&record, sizeof(Record));
-       this->index[record.getKey()] = posFisica;
-       dataFile.close();
+       // Nombre es llave única por lo que no se puede repetir
+        if(this->index.find(record.getKey()) != this->index.end()){
+            try{
+                throw "Ya existe un registro con el mismo nombre";
+            }catch(const char* msg){
+                cerr << msg << endl;
+            }
+        }else{
+            dataFile.write((char*)&record, sizeof(Record));
+            this->index[record.getKey()] = posFisica;
+        }
+        dataFile.close();
     }
 
 
