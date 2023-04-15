@@ -56,6 +56,9 @@ public:
     {
       ifstream indexfile;
         indexfile.open(this->indexName, ios::in | ios::out | ios::binary);
+        if (!indexfile.is_open()) {
+        throw runtime_error("No se pudo abrir el archivo de índice");
+        }
         if(indexfile.good())    //Si el archivo existe
         {
             //Compruebo que el archivo no este vacio
@@ -87,6 +90,9 @@ public:
     */
     void writeIndex(){
         ofstream file(this->indexName, ios::out | ios::binary);
+        if (!file.is_open()) {
+        throw runtime_error("No se pudo abrir el archivo de índice para escribir");
+        }
         for(auto& entry : index){
             //Guardo la key
             file.write(entry.first.c_str(), 30);
