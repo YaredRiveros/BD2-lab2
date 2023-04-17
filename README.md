@@ -3,4 +3,4 @@
 ## Integrantes
 - Yared Riveros Rodriguez
 - Mariajulia Romani Tafur
-- Camial Rodriguez Valverde
+- Camila Rodriguez Valverde
